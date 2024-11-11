@@ -1,4 +1,4 @@
-name: "Repository Gardener"
+name: "Repo Pruner"
 description: "Scans for inactive branches, opens PRs for review, and assigns branch creators as reviewers to merge or delete branches."
 author: "Armin Broubakarian"
 
