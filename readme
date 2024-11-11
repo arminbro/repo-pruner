@@ -1,6 +1,6 @@
 # Repo Gardener
 
-**Repo Gardener** is a GitHub Action designed to help maintain clean and organized repositories by monitoring inactive branches. This tool scans for branches that have been inactive for a specified duration (based on the last commit date) and automatically opens a pull request for each branch. The branch creator is assigned as the reviewer, allowing them to either merge their work or close the PR and delete the branch, ensuring your repository remains streamlined and clutter-free.
+<!-- **Repo Gardener** is a GitHub Action designed to help maintain clean and organized repositories by monitoring inactive branches. This tool scans for branches that have been inactive for a specified duration (based on the last commit date) and automatically opens a pull request for each branch. The branch creator is assigned as the reviewer, allowing them to either merge their work or close the PR and delete the branch, ensuring your repository remains streamlined and clutter-free.
 
 ## Features
 - Scans branches for inactivity based on the number of days since the last commit.
@@ -73,4 +73,4 @@ Ensure you have the following dependencies installed:
 Contributions, issues, and feature requests are welcome! Feel free to open a pull request or issue in the repository.
 
 ## License
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+This project is licensed under the MIT License. See the `LICENSE` file for more details. -->
