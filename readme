@@ -33,11 +33,11 @@ jobs:
 
 ## Inputs
 
-| Name           | Description                                                                                  | Required | Default     |
-|----------------|----------------------------------------------------------------------------------------------|----------|-------------|
-| `repo-token`   | GitHub token for authentication, typically set to `${{ secrets.GITHUB_TOKEN }}`.            | Yes      | N/A         |
-| `inactive_days`| Number of days since the last commit before a branch is considered inactive.                 | No       | `30`        |
-| `base_branch`  | The base branch used for the pull request.                                                   | No       | `main`      |
+| Name           | Description                                                                      | Required | Default |
+|----------------|----------------------------------------------------------------------------------|----------|---------|
+| `repo-token`   | GitHub token for authentication, typically set to `${{ secrets.GITHUB_TOKEN }}`. | Yes      | N/A     |
+| `inactive_days`| Number of days since the last commit before a branch is considered inactive.     | No       | `30`    |
+| `base_branch`  | The base branch used for the pull request.                                       | No       | `main`  |
 
 ## Sample Pull Request Body
 ```markdown
