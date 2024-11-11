@@ -40,7 +40,7 @@ jobs:
 | `base_branch`  | The base branch used for the pull request.                                                   | No       | `main`      |
 
 ## Environment Variables
-- **`GITHUB_TOKEN`** (required): GitHub token for authentication, typically set to `${{ secrets.GITHUB_TOKEN }}`.
+- **`GITHUB_TOKEN`** (required): GitHub token for authentication.
 
 ## Permissions
 Ensure your GitHub Actions workflow has sufficient permissions to:
