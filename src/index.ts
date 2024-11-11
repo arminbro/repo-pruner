@@ -29,6 +29,12 @@ async function run() {
     });
 
     for (const branch of branches) {
+      // Skip the base branch
+      if (branch.name === baseBranch) {
+        core.info(`Skipping base branch: ${branch.name}`);
+        continue;
+      }
+
       // Skip protected branches
       if (branch.protected) {
         core.info(`Skipping protected branch: ${branch.name}`);
@@ -43,6 +49,7 @@ async function run() {
         state: 'open',
       });
 
+      // Skip branches that already has an open PR.
       if (prs.length > 0) {
         core.info(`Skipping branch ${branch.name} as it already has an open PR.`);
         continue;
@@ -62,26 +69,23 @@ async function run() {
         throw new Error(`Branch ${branch.name} is missing the last commit date.`);
       }
 
-      console.log('lastCommitDate', lastCommitDate);
-      console.log('thresholdDate', thresholdDate);
-
       if (lastCommitDate < thresholdDate) {
         // Branch is inactive
         const branchName = branch.name;
         const creator = data.author?.login || 'unknown';
 
         // Create a pull request for the branch
-        const prTitle = `Review: Merge inactive branch '${branchName}'`;
+        const prTitle = `Review: Inactive branch '${branchName}'`;
         const prBody = `
 ### Inactive Branch Notice
 
 This branch has been inactive since ${lastCommitDate.toISOString().split('T')[0]}.
-You are assigned as the reviewer. Please merge if complete, or close the PR and delete the branch.
+You have been assigned as the reviewer. If the work is complete, please merge this branch and delete it. Otherwise, close this PR and delete this branch.
 
-@${creator}
+Cc: @${creator}
         `;
 
-        await octokit.rest.pulls.create({
+        const prResponse = await octokit.rest.pulls.create({
           owner,
           repo,
           title: prTitle,
@@ -90,7 +94,17 @@ You are assigned as the reviewer. Please merge if complete, or close the PR and 
           body: prBody,
         });
 
-        core.info(`Pull request created for branch: ${branchName}`);
+        const prNumber = prResponse.data.number;
+
+        // Assign the creator as a reviewer to the PR
+        await octokit.rest.pulls.requestReviewers({
+          owner,
+          repo,
+          pull_number: prNumber,
+          reviewers: [creator],
+        });
+
+        core.info(`Pull request created for branch: ${branchName} and reviewer assigned: ${creator}`);
       }
     }
   } catch (error) {
