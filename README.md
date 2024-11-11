@@ -16,7 +16,7 @@ To use **Repo Pruner**, add it to your workflow file:
 name: "Run Repo Pruner"
 on:
   schedule:
-    - cron: '0 0 * * 0' # Runs weekly
+    - cron: '0 0 * * 0' # Example: You can run it weekly
   workflow_dispatch:
 
 jobs:
