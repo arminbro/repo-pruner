@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2023",
+    "moduleResolution": "node",
     "module": "commonjs",
+    "rootDir": "./src",
     "outDir": "dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
