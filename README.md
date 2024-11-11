@@ -54,4 +54,4 @@ Using `${{ secrets.GITHUB_TOKEN }}` should provide the necessary permissions for
 Contributions, issues, and feature requests are welcome! Feel free to open a pull request or issue in the repository.
 
 ## License
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/arminbro/repo-pruner/blob/master/LICENSE) file for more details.
