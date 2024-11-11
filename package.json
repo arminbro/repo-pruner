@@ -1,5 +1,5 @@
 {
-  "name": "repo-gardener",
+  "name": "repo-pruner",
   "description": "A GitHub Action for keeping repositories clean and organized.",
   "version": "1.0.0",
   "author": "Armin Broubakarian",

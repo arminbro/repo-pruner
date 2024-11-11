@@ -1,6 +1,6 @@
-# Repo Gardener
+# Repo Pruner
 
-**Repo Gardener** is a GitHub Action designed to help maintain clean and organized repositories by monitoring inactive branches. This tool scans for branches that have been inactive for a specified duration (based on the last commit date) and automatically opens a pull request for each branch. The branch creator is assigned as the reviewer, allowing them to either merge their work or close the PR and delete the branch, ensuring your repository remains streamlined and clutter-free.
+**Repo Pruner** is a GitHub Action designed to help maintain clean and organized repositories by monitoring inactive branches. This tool scans for branches that have been inactive for a specified duration (based on the last commit date) and automatically opens a pull request for each branch. The branch creator is assigned as the reviewer, allowing them to either merge their work or close the PR and delete the branch, ensuring your repository remains streamlined and clutter-free.
 
 ## Features
 - Scans branches for inactivity based on the number of days since the last commit.
@@ -10,21 +10,21 @@
 - Provides a customizable inactivity threshold and base branch.
 
 ## Usage
-To use **Repo Gardener**, add it to your workflow file:
+To use **Repo Pruner**, add it to your workflow file:
 
 ```yaml
-name: "Run Repo Gardener"
+name: "Run Repo Pruner"
 on:
   schedule:
     - cron: '0 0 * * 0' # Runs weekly
   workflow_dispatch:
 
 jobs:
-  repo-gardener:
+  repo-pruner:
     runs-on: ubuntu-latest
     steps:
-      - name: Run Repo Gardener
-        uses: arminbro/repo-gardener@v1
+      - name: Run Repo Pruner
+        uses: arminbro/repo-pruner@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           inactive_days: 30
