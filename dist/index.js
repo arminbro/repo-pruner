@@ -29940,8 +29940,12 @@ const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 async function run() {
     try {
+        // Get token
+        const token = process.env.GITHUB_TOKEN;
+        if (!token) {
+            throw new Error(`GITHUB_TOKEN environment variable is not set`);
+        }
         // Get input values
-        const token = core.getInput('repo-token', { required: true });
         const inactiveDays = parseInt(core.getInput('inactive_days') || '30');
         const baseBranch = core.getInput('base_branch') || 'main';
         const octokit = github.getOctokit(token);
@@ -29983,6 +29987,8 @@ async function run() {
             if (!lastCommitDate) {
                 throw new Error(`Branch ${branch.name} is missing the last commit date.`);
             }
+            console.log('lastCommitDate', lastCommitDate);
+            console.log('thresholdDate', thresholdDate);
             if (lastCommitDate < thresholdDate) {
                 // Branch is inactive
                 const branchName = branch.name;

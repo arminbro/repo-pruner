@@ -62,6 +62,9 @@ async function run() {
         throw new Error(`Branch ${branch.name} is missing the last commit date.`);
       }
 
+      console.log('lastCommitDate', lastCommitDate);
+      console.log('thresholdDate', thresholdDate);
+
       if (lastCommitDate < thresholdDate) {
         // Branch is inactive
         const branchName = branch.name;
