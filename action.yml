@@ -1,6 +1,18 @@
 name: "Repo Gardener"
 description: "Scans for inactive branches, opens PRs for review, and assigns branch creators as reviewers to merge or delete branches."
 author: "Armin Broubakarian"
+inputs:
+  repo-token:
+    description: "GitHub token for authentication"
+    required: true
+  inactive_days:
+    description: "Number of days since the last commit before a branch is considered inactive (default 30)"
+    required: false
+    default: "30"
+  base_branch:
+    description: "Base branch used for the pull request (default 'main')"
+    required: false
+    default: "main"
 runs:
   using: 'node20'
   main: 'dist/index.js'

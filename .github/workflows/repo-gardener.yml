@@ -1,0 +1,16 @@
+name: "Run Repo Gardener"
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Runs weekly
+  workflow_dispatch:
+
+jobs:
+  repo-gardener:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Repo Gardener
+        uses: arminbro/repo-gardener@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          inactive_days: 30
+          base_branch: main
