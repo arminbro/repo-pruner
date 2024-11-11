@@ -3,8 +3,14 @@ import * as github from '@actions/github';
 
 async function run() {
   try {
+    // Get token
+    const token = process.env.GITHUB_TOKEN;
+
+    if (!token) {
+      throw new Error(`GITHUB_TOKEN environment variable is not set`);
+    }
+
     // Get input values
-    const token = core.getInput('repo-token', { required: true });
     const inactiveDays = parseInt(core.getInput('inactive_days') || '30');
     const baseBranch = core.getInput('base_branch') || 'main';
 

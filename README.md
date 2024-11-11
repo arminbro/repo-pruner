@@ -25,19 +25,22 @@ jobs:
     steps:
       - name: Run Repo Pruner
         uses: arminbro/repo-pruner@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
           inactive_days: 30
           base_branch: main
 ```
 
 ## Inputs
 
-| Name           | Description                                                                      | Required | Default |
-|----------------|----------------------------------------------------------------------------------|----------|---------|
-| `repo-token`   | GitHub token for authentication, typically set to `${{ secrets.GITHUB_TOKEN }}`. | Yes      | N/A     |
-| `inactive_days`| Number of days since the last commit before a branch is considered inactive.     | No       | `30`    |
-| `base_branch`  | The base branch used for the pull request.                                       | No       | `main`  |
+| Name           | Description                                                                                  | Required | Default     |
+|----------------|----------------------------------------------------------------------------------------------|----------|-------------|
+| `inactive_days`| Number of days since the last commit before a branch is considered inactive.                 | No       | `30`        |
+| `base_branch`  | The base branch used for the pull request.                                                   | No       | `main`      |
+
+## Environment Variables
+- **`GITHUB_TOKEN`** (required): GitHub token for authentication, typically set to `${{ secrets.GITHUB_TOKEN }}`.
 
 ## Permissions
 Ensure your GitHub Actions workflow has sufficient permissions to:

@@ -3,9 +3,6 @@ description: "Scans for inactive branches, opens PRs for review, and assigns bra
 author: "Armin Broubakarian"
 
 inputs:
-  repo-token:
-    description: "GitHub token for authentication"
-    required: true
   inactive_days:
     description: "Number of days since the last commit before a branch is considered inactive (default 30)"
     required: false
