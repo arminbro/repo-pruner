@@ -39,15 +39,6 @@ jobs:
 | `inactive_days`| Number of days since the last commit before a branch is considered inactive.     | No       | `30`    |
 | `base_branch`  | The base branch used for the pull request.                                       | No       | `main`  |
 
-## Sample Pull Request Body
-```markdown
-### Inactive Branch Notice
-
-This branch has been inactive since YYYY-MM-DD. You are assigned as the reviewer. Please merge if complete, or close the PR and delete the branch.
-
-@branch-creator
-```
-
 ## Permissions
 Ensure your GitHub Actions workflow has sufficient permissions to:
 - **Read branches**
@@ -55,19 +46,6 @@ Ensure your GitHub Actions workflow has sufficient permissions to:
 - **Assign reviewers**
 
 Using `${{ secrets.GITHUB_TOKEN }}` should provide the necessary permissions for most standard uses.
-
-## Installation and Build
-**Repo Gardener** is a TypeScript project compiled using `@vercel/ncc` to produce a single-file distribution.
-
-### Building the Project
-Run the following command to build the `dist/index.js` file:
-```bash
-npm run build
-```
-Ensure you have the following dependencies installed:
-- `@actions/core`
-- `@actions/github`
-- `@vercel/ncc`
 
 ## Contributing
 Contributions, issues, and feature requests are welcome! Feel free to open a pull request or issue in the repository.

@@ -1,6 +1,7 @@
-name: "Repo Gardener"
+name: "repo-gardener"
 description: "Scans for inactive branches, opens PRs for review, and assigns branch creators as reviewers to merge or delete branches."
 author: "Armin Broubakarian"
+
 inputs:
   repo-token:
     description: "GitHub token for authentication"
@@ -13,6 +14,11 @@ inputs:
     description: "Base branch used for the pull request (default 'main')"
     required: false
     default: "main"
+
 runs:
   using: 'node20'
   main: 'dist/index.js'
+
+branding:
+  icon: git-branch
+  color: green
