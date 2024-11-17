@@ -25,8 +25,8 @@ export async function createOrUpdateSummaryIssue(
     labels: 'Repo Pruner Summary',
   });
 
-  let handledBranches = new Set<string>();
   let keepBranches = new Set<string>();
+  let deletedBranches = new Set<string>();
 
   if (issues.length > 0) {
     // Retrieve the existing issue details
@@ -52,16 +52,16 @@ export async function createOrUpdateSummaryIssue(
           // Extract the branch name from the second column (index 1)
           const branchName = columns[1].replace(/`/g, ''); // Remove backticks
 
-          // Check the "Handled" and "Keep" columns for checkboxes
-          const handledChecked = columns[5] === '[x]';
-          const keepChecked = columns[6] === '[x]';
+          // Check the "Keep" and "Deleted" columns for checkboxes
+          const keepChecked = columns[5] === '[x]';
+          const deletedChecked = columns[6] === '[x]';
 
           // Add the branch to the appropriate set
-          if (handledChecked) {
-            handledBranches.add(branchName);
-          }
           if (keepChecked) {
             keepBranches.add(branchName);
+          }
+          if (deletedChecked) {
+            deletedBranches.add(branchName);
           }
         }
       }
@@ -72,8 +72,8 @@ export async function createOrUpdateSummaryIssue(
 
   // Create the new issue body in table format with preserved check states
   const tableHeader = `
-| Branch | Last Commit Date | Creator | Status | Pull Request | Handled | Keep |
-|--------|------------------|---------|--------|--------------|---------|------|`;
+| Branch | Last Commit Date | Creator | Status | Pull Request | Keep | Deleted |
+|--------|------------------|---------|--------|--------------|------|---------|`;
 
   const tableRows = inactiveBranches.map((branch) => {
     const status = branch.isMerged ? 'Merged' : 'Unmerged';
@@ -81,12 +81,12 @@ export async function createOrUpdateSummaryIssue(
       ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})`
       : 'None';
 
-    return `| \`${branch.name}\` | ${branch.lastCommitDate} | @${branch.creator} | ${status} | ${prLink} | [${handledBranches.has(branch.name) ? 'x' : ' '}] | [${keepBranches.has(branch.name) ? 'x' : ' '}] |`;
+    return `| \`${branch.name}\` | ${branch.lastCommitDate} | @${branch.creator} | ${status} | ${prLink} | <li>- [${keepBranches.has(branch.name) ? 'x' : ' '}]</li> | <li>- [${deletedBranches.has(branch.name) ? 'x' : ' '}]</li> |`;
   });
 
   const issueBody = `### Inactive Branches
 
-This is a list of branches that have been inactive based on the specified threshold. Please check off either "Handled" or "Keep" for each branch.
+This is a list of branches that have been inactive based on the specified threshold. Please check off either "Keep" or "Deleted" for each branch.
 
 ${tableHeader}
 ${tableRows.join('\n')}`;
