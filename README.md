@@ -1,5 +1,9 @@
 # Repo Pruner
 
+<p align="center">
+  <img alt="Repo Pruner" src="https://raw.githubusercontent.com/arminbro/repo-pruner/master/docs/assets/repo-pruner.webp"/>
+</p>
+
 **Repo Pruner** is a GitHub Action designed to help maintain clean and organized repositories by monitoring inactive branches. This tool scans for branches that have been inactive for a specified duration and creates a summary issue listing their status. The issue includes details like the branch name, the last commit date, whether the branch has been merged, and any associated pull requests, allowing your team to review and decide on further actions.
 
 ## Features
@@ -36,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Repo Pruner
-        uses: arminbro/repo-pruner@v2.1.17
+        uses: arminbro/repo-pruner@v2.1.18
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
