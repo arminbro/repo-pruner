@@ -16,49 +16,8 @@ export async function createOrUpdateSummaryIssue(
 
   const octokit = github.getOctokit(token);
 
-  // Check if an existing summary issue is open
-  const { data: issues } = await octokit.rest.issues.listForRepo({
-    owner,
-    repo,
-    state: 'open',
-    labels: 'Repo Pruner Summary',
-  });
-
-  let keepBranches = new Set<string>();
-  let deleteBranches = new Set<string>();
-
-  if (issues.length > 0) {
-    // Retrieve the existing issue details
-    const issueNumber = issues[0].number;
-    const { data: existingIssue } = await octokit.rest.issues.get({
-      owner,
-      repo,
-      issue_number: issueNumber,
-    });
-
-    const existingBody = existingIssue.body || '';
-    const lines = existingBody.split('\n');
-
-    // Parse existing issue body to track previously marked branches
-    for (const line of lines) {
-      if (line.startsWith('#### Branch: ')) {
-        const start = line.indexOf('[') + 1; // Find the opening square bracket
-        const end = line.indexOf(']'); // Find the closing square bracket
-        const branchName = line.substring(start, end); // Extract the branch name
-
-        if (line.includes('- [x] **Keep**')) {
-          keepBranches.add(branchName);
-        } else if (line.includes('- [x] **Delete**')) {
-          deleteBranches.add(branchName);
-        }
-      }
-    }
-
-    core.info(`Found existing summary issue #${issueNumber} with previous branch statuses.`);
-  }
-
-  // Create the new issue body with updated format
-  const issueBody = `### Inactive Branches
+  // Create the new issue body
+  const issueBody = `### ${inactiveBranches.length} Inactive Branches
 
 This is a list of branches that have been inactive beyond the specified threshold. If you are the creator of a branch, please review it and delete it if it is no longer needed. After reviewing and taking action, return to this page and check off either "Keep" or "Delete" for each branch to notify your team of your decision.
 
@@ -78,26 +37,33 @@ _Pull Request:_ ${
 
 \n
 **Did you keep or delete this branch?**
-- [${keepBranches.has(branch.name) ? 'x' : ' '}] **Keep**
-- [${deleteBranches.has(branch.name) ? 'x' : ' '}] **Delete**
+- [' '}] **Keep**
+- [' '}] **Delete**
 `
   )
   .join('\n---\n')}
 `;
 
+  // Check if an existing summary issue is open
+  const { data: issues } = await octokit.rest.issues.listForRepo({
+    owner,
+    repo,
+    state: 'open',
+    labels: 'Repo Pruner Summary',
+  });
+
+  // Close the summary issue if it already exists
   if (issues.length > 0) {
-    // Update existing summary issue
     const issueNumber = issues[0].number;
 
     await octokit.rest.issues.update({
       owner,
       repo,
       issue_number: issueNumber,
-      body: issueBody,
+      state: 'closed',
     });
 
-    core.info(`Updated existing summary issue #${issueNumber}`);
-    return;
+    core.info(`Closed existing summary issue #${issueNumber}`);
   }
 
   // Create a new summary issue

@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Repo Pruner
-        uses: arminbro/repo-pruner@v2.1.14
+        uses: arminbro/repo-pruner@v2.1.15
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -37,59 +37,6 @@ jobs:
 | Name            | Description                                                                                          | Required | Default     |
 |-----------------|------------------------------------------------------------------------------------------------------|----------|-------------|
 | `inactive_days` | Number of days since the last commit before a branch is considered inactive.                         | No       | `30`        |
-
-## Output Summary
-The action generates a GitHub issue summarizing all inactive branches. Each branch is listed with the following details:
-- **Branch Name**: The name of the branch.
-- **Last Commit Date**: The date of the last commit on the branch.
-- **Creator**: The username of the branch creator.
-- **Status**: Indicates whether the branch has been merged into another branch or remains unmerged.
-- **Pull Request**: A link to the associated pull request (if any) or "None" if no PR exists.
-- **Keep or Delete**: Developers can mark a branch as either "Keep" (branch should not be deleted) or "Delete" (branch they have already deleted).
-
-### Example Issue
-
-```md
-### Inactive Branches
-
-This is a list of branches that have been inactive beyond the specified threshold. If you are the creator of a branch, please review it and delete it if it is no longer needed. After reviewing and taking action, return to this page and check off either "Keep" or "Delete" for each branch to notify your team of your decision.
-
-This list was automatically generated using [Repo Pruner](https://github.com/marketplace/actions/repo-pruner).
-
-#### Branch: `feature-1`
-_Last Commit Date:_ 11/01/2024  
-_Creator:_ @johndoe  
-_Status:_ Merged  
-_Pull Request:_ [PR #42](#)
-
-**Did you keep or delete this branch?**
-- [ ] **Keep**
-- [ ] **Delete**
-
----
-
-#### Branch: `hotfix-123`
-_Last Commit Date:_ 10/15/2024  
-_Creator:_ @janedoe  
-_Status:_ Unmerged  
-_Pull Request:_ None
-
-**Did you keep or delete this branch?**
-- [ ] **Keep**
-- [ ] **Delete**
-
----
-
-#### Branch: `experiment-2`
-_Last Commit Date:_ 10/05/2024  
-_Creator:_ @janedoe  
-_Status:_ Unmerged  
-_Pull Request:_ None
-
-**Did you keep or delete this branch?**
-- [ ] **Keep**
-- [ ] **Delete**
-```
 
 ## Environment Variables
 - **`GITHUB_TOKEN`** (required): GitHub token for authentication.
