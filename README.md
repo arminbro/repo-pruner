@@ -8,7 +8,18 @@
 - Displays the status of each branch (e.g., merged, unmerged).
 - Includes links to associated pull requests or marks branches without PRs as "None."
 - Provides a customizable inactivity threshold.
+- Preserves the history of summary issues by closing the previous summary issue before creating a new one.
 - Allows developers to mark branches as **Keep** or **Delete** via checkboxes for clear communication.
+
+## How It Works
+When **Repo Pruner** runs, it:
+1. **Scans all branches** for inactivity based on the specified threshold.
+2. **Checks for an existing summary issue** labeled "Repo Pruner Summary."
+3. **Closes the existing summary issue**, preserving it for historical reference.
+4. **Creates a new summary issue** with the latest list of inactive branches and updated details.
+5. **Posts the new summary issue**, allowing team members to review and take action on inactive branches.
+
+This ensures that the repository stays organized, while past activity is retained for review.
 
 ## Usage
 To use **Repo Pruner**, add it to your workflow file:
@@ -25,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Repo Pruner
-        uses: arminbro/repo-pruner@v2.1.16
+        uses: arminbro/repo-pruner@v2.1.17
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -45,7 +56,7 @@ jobs:
 Ensure your GitHub Actions workflow has sufficient permissions to:
 - **Read branches**
 - **List pull requests**
-- **Create and update issues**
+- **Create and close issues**
 
 Using `${{ secrets.GITHUB_TOKEN }}` should provide the necessary permissions for most standard uses.
 
