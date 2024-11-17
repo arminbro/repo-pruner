@@ -52,13 +52,38 @@ The action generates a GitHub issue summarizing all inactive branches. Each bran
 ```md
 ### Inactive Branches
 
-This is a list of branches that have been inactive based on the specified threshold. Please check off either "Keep" or "Deleted" for each branch.
+This is a list of branches that have been inactive for a specified period. Please mark either "Kept" or "Deleted" for each branch to inform your team about your decision.
 
-| Branch  | Last Commit Date  | Creator  | Status  | Pull Request  | Keep  | Deleted  |
-|---------|-------------------|----------|---------|---------------|----------|-------|
-| `feature-1` | 11/01/2024 | @johndoe | Merged | [PR #42](#) | [ ] | [ ] |
-| `hotfix-123` | 10/15/2024 | @janedoe | Unmerged | None | [ ] | [ ] |
-| `experiment-2` | 10/05/2024 | @janedoe | Unmerged | None | [ ] | [ ] |
+#### Branch: `feature-1`
+_Last Commit Date:_ 11/01/2024  
+_Creator:_ @johndoe  
+_Status:_ Merged  
+_Pull Request:_ [PR #42](#)
+
+- [ ] **Kept**
+- [ ] **Deleted**
+
+---
+
+#### Branch: `hotfix-123`
+_Last Commit Date:_ 10/15/2024  
+_Creator:_ @janedoe  
+_Status:_ Unmerged  
+_Pull Request:_ None
+
+- [ ] **Kept**
+- [ ] **Deleted**
+
+---
+
+#### Branch: `experiment-2`
+_Last Commit Date:_ 10/05/2024  
+_Creator:_ @janedoe  
+_Status:_ Unmerged  
+_Pull Request:_ None
+
+- [ ] **Kept**
+- [ ] **Deleted**
 ```
 
 ## Environment Variables

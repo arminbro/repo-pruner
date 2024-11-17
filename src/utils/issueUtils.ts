@@ -42,54 +42,43 @@ export async function createOrUpdateSummaryIssue(
 
     // Parse existing issue body to track previously marked branches
     for (const line of lines) {
-      // Identify lines that are table rows (start with a "|")
-      if (line.startsWith('|')) {
-        // Split the line by the pipe character to get individual columns
-        const columns = line.split('|').map((col) => col.trim());
+      // Match checkboxes for "Kept" and "Deleted"
+      if (line.includes('- [x] **Kept**')) {
+        const branchName = line.match(/`([^`]+)`/)?.[1];
+        if (branchName) keepBranches.add(branchName);
+      }
 
-        // Ensure there are enough columns to parse (7 columns expected)
-        if (columns.length >= 7) {
-          // Extract the branch name from the second column (index 1)
-          const branchName = columns[1].replace(/`/g, ''); // Remove backticks
-
-          // Check the "Keep" and "Deleted" columns for checkboxes
-          const keepChecked = columns[5] === '[x]';
-          const deletedChecked = columns[6] === '[x]';
-
-          // Add the branch to the appropriate set
-          if (keepChecked) {
-            keepBranches.add(branchName);
-          }
-          if (deletedChecked) {
-            deletedBranches.add(branchName);
-          }
-        }
+      if (line.includes('- [x] **Deleted**')) {
+        const branchName = line.match(/`([^`]+)`/)?.[1];
+        if (branchName) deletedBranches.add(branchName);
       }
     }
 
     core.info(`Found existing summary issue #${issueNumber} with previous branch statuses.`);
   }
 
-  // Create the new issue body in table format with preserved check states
-  const tableHeader = `
-| Branch | Last Commit Date | Creator | Status | Pull Request | Keep | Deleted |
-|--------|------------------|---------|--------|--------------|------|---------|`;
-
-  const tableRows = inactiveBranches.map((branch) => {
-    const status = branch.isMerged ? 'Merged' : 'Unmerged';
-    const prLink = branch.prNumber
-      ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})`
-      : 'None';
-
-    return `| \`${branch.name}\` | ${branch.lastCommitDate} | @${branch.creator} | ${status} | ${prLink} | <li>- [${keepBranches.has(branch.name) ? 'x' : ' '}]</li> | <li>- [${deletedBranches.has(branch.name) ? 'x' : ' '}]</li> |`;
-  });
-
+  // Create the new issue body with updated format
   const issueBody = `### Inactive Branches
 
-This is a list of branches that have been inactive based on the specified threshold. Please check off either "Keep" or "Deleted" for each branch.
+This is a list of branches that have been inactive based on the specified threshold. Please check off either "Kept" or "Deleted" for each branch to inform your team about your decision.
 
-${tableHeader}
-${tableRows.join('\n')}`;
+${inactiveBranches
+  .map(
+    (branch) => `
+#### Branch: \`${branch.name}\`
+_Last Commit Date:_ ${branch.lastCommitDate}  
+_Creator:_ @${branch.creator}  
+_Status:_ ${branch.isMerged ? 'Merged' : 'Unmerged'}  
+_Pull Request:_ ${
+      branch.prNumber ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})` : 'None'
+    }
+
+- [${keepBranches.has(branch.name) ? 'x' : ' '}] **Kept**
+- [${deletedBranches.has(branch.name) ? 'x' : ' '}] **Deleted**
+`
+  )
+  .join('\n---\n')}
+`;
 
   if (issues.length > 0) {
     // Update existing summary issue
