@@ -30091,7 +30091,6 @@ async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
         throw new Error('GITHUB_TOKEN environment variable is not set.');
     }
     const octokit = github.getOctokit(token);
-    const issueTitle = 'Repo Pruner: Inactive Branches Summary';
     // Check if an existing summary issue is open
     const { data: issues } = await octokit.rest.issues.listForRepo({
         owner,
@@ -30100,7 +30099,7 @@ async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
         labels: 'Repo Pruner Summary',
     });
     let keepBranches = new Set();
-    let deletedBranches = new Set();
+    let deleteBranches = new Set();
     if (issues.length > 0) {
         // Retrieve the existing issue details
         const issueNumber = issues[0].number;
@@ -30113,16 +30112,16 @@ async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
         const lines = existingBody.split('\n');
         // Parse existing issue body to track previously marked branches
         for (const line of lines) {
-            // Match checkboxes for "Kept" and "Deleted"
-            if (line.includes('- [x] **Kept**')) {
-                const branchName = line.match(/`([^`]+)`/)?.[1];
-                if (branchName)
+            if (line.startsWith('#### Branch: ')) {
+                const start = line.indexOf('[') + 1; // Find the opening square bracket
+                const end = line.indexOf(']'); // Find the closing square bracket
+                const branchName = line.substring(start, end); // Extract the branch name
+                if (line.includes('- [x] **Keep**')) {
                     keepBranches.add(branchName);
-            }
-            if (line.includes('- [x] **Deleted**')) {
-                const branchName = line.match(/`([^`]+)`/)?.[1];
-                if (branchName)
-                    deletedBranches.add(branchName);
+                }
+                else if (line.includes('- [x] **Delete**')) {
+                    deleteBranches.add(branchName);
+                }
             }
         }
         core.info(`Found existing summary issue #${issueNumber} with previous branch statuses.`);
@@ -30130,18 +30129,23 @@ async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
     // Create the new issue body with updated format
     const issueBody = `### Inactive Branches
 
-This is a list of branches that have been inactive based on the specified threshold. Please check off either "Kept" or "Deleted" for each branch to inform your team about your decision.
+This is a list of branches that have been inactive beyond the specified threshold. If you are the creator of a branch, please review it and delete it if it is no longer needed. After reviewing and taking action, return to this page and check off either "Keep" or "Delete" for each branch to notify your team of your decision.
+
+This list was automatically generated using [Repo Pruner](https://github.com/marketplace/actions/repo-pruner).
+\n---\n
 
 ${inactiveBranches
         .map((branch) => `
-#### Branch: \`${branch.name}\`
+#### Branch: [${branch.name}](https://github.com/${owner}/${repo}/branches/all?query=${branch.name})
 _Last Commit Date:_ ${branch.lastCommitDate}  
-_Creator:_ @${branch.creator}  
+_Creator:_ ${branch.creator === 'unknown' ? 'unknown' : `@${branch.creator}`}  
 _Status:_ ${branch.isMerged ? 'Merged' : 'Unmerged'}  
 _Pull Request:_ ${branch.prNumber ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})` : 'None'}
 
-- [${keepBranches.has(branch.name) ? 'x' : ' '}] **Kept**
-- [${deletedBranches.has(branch.name) ? 'x' : ' '}] **Deleted**
+\n
+**Did you keep or delete this branch?**
+- [${keepBranches.has(branch.name) ? 'x' : ' '}] **Keep**
+- [${deleteBranches.has(branch.name) ? 'x' : ' '}] **Delete**
 `)
         .join('\n---\n')}
 `;
@@ -30161,7 +30165,7 @@ _Pull Request:_ ${branch.prNumber ? `[PR #${branch.prNumber}](https://github.com
     await octokit.rest.issues.create({
         owner,
         repo,
-        title: issueTitle,
+        title: 'Repo Pruner: Inactive Branches Summary',
         body: issueBody,
         labels: ['Repo Pruner Summary'],
     });
