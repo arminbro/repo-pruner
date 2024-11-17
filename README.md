@@ -8,6 +8,7 @@
 - Displays the status of each branch (e.g., merged, unmerged).
 - Includes links to associated pull requests or marks branches without PRs as "None."
 - Provides a customizable inactivity threshold.
+- Allows developers to mark branches as "Handled" or "Keep" via checkboxes for clear communication.
 
 ## Usage
 To use **Repo Pruner**, add it to your workflow file:
@@ -44,20 +45,19 @@ The action generates a GitHub issue summarizing all inactive branches. Each bran
 - **Creator**: The username of the branch creator.
 - **Status**: Indicates whether the branch has been merged into another branch or remains unmerged.
 - **Pull Request**: A link to the associated pull request (if any) or "None" if no PR exists.
+- **Handled or Keep**: Developers can mark a branch as either "Handled" (merged or deleted) or "Keep" (branch should not be deleted).
 
 ### Example Issue
 ```md
 ### Inactive Branches
 
-This is a list of branches that have been inactive based on the specified threshold.
+This is a list of branches that have been inactive based on the specified threshold. Please check off either "Handled" or "Keep" for each branch.
 
-| Branch       | Last Commit Date | Creator    | Status     | Pull Request          |
-|--------------|------------------|------------|------------|-----------------------|
-| feature-1    | 11/01/2024       | @johndoe   | Merged     | [PR #42](https://github.com/my-org/my-repo/pull/42) |
-| hotfix-123   | 10/15/2024       | @janedoe   | Unmerged   | None                  |
-| experiment-2 | 10/05/2024       | @janedoe   | Unmerged   | None                  |
-| feature-3    | 11/05/2024       | @alice     | Open       | [PR #99](https://github.com/my-org/my-repo/pull/99) |
-```
+| Branch  | Last Commit Date  | Creator  | Status  | Pull Request  | Handled  | Keep  |
+|---------|-------------------|----------|---------|---------------|----------|-------|
+| `feature-1` | 11/01/2024 | @johndoe | Merged | [PR #42](#) | [ ] | [ ] |
+| `hotfix-123` | 10/15/2024 | @janedoe | Unmerged | None | [ ] | [ ] |
+| `experiment-2` | 10/05/2024 | @janedoe | Unmerged | None | [ ] | [ ] |
 
 ## Environment Variables
 - **`GITHUB_TOKEN`** (required): GitHub token for authentication.

@@ -17,27 +17,6 @@ export async function createOrUpdateSummaryIssue(
   const octokit = github.getOctokit(token);
   const issueTitle = 'Repo Pruner: Inactive Branches Summary';
 
-  // Construct the issue body
-  const tableHeader = `
-| Branch | Last Commit Date | Creator | Status     | Pull Request |
-|--------|------------------|---------|------------|--------------|`;
-
-  const tableRows = inactiveBranches.map((branch) => {
-    const status = branch.isMerged ? 'Merged' : 'Unmerged';
-    const prLink = branch.prNumber
-      ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})`
-      : 'None';
-
-    return `| ${branch.name} | ${branch.lastCommitDate} | @${branch.creator} | ${status} | ${prLink} |`;
-  });
-
-  const issueBody = `### Inactive Branches
-
-This is a list of branches that have been inactive based on the specified threshold.
-
-${tableHeader}
-${tableRows.join('\n')}`;
-
   // Check if an existing summary issue is open
   const { data: issues } = await octokit.rest.issues.listForRepo({
     owner,
@@ -46,8 +25,74 @@ ${tableRows.join('\n')}`;
     labels: 'Repo Pruner Summary',
   });
 
+  let handledBranches = new Set<string>();
+  let keepBranches = new Set<string>();
+
   if (issues.length > 0) {
-    // Update the existing issue
+    // Retrieve the existing issue details
+    const issueNumber = issues[0].number;
+    const { data: existingIssue } = await octokit.rest.issues.get({
+      owner,
+      repo,
+      issue_number: issueNumber,
+    });
+
+    const existingBody = existingIssue.body || '';
+    const lines = existingBody.split('\n');
+
+    // Parse existing issue body to track previously marked branches
+    for (const line of lines) {
+      // Identify lines that are table rows (start with a "|")
+      if (line.startsWith('|')) {
+        // Split the line by the pipe character to get individual columns
+        const columns = line.split('|').map((col) => col.trim());
+
+        // Ensure there are enough columns to parse (7 columns expected)
+        if (columns.length >= 7) {
+          // Extract the branch name from the second column (index 1)
+          const branchName = columns[1].replace(/`/g, ''); // Remove backticks
+
+          // Check the "Handled" and "Keep" columns for checkboxes
+          const handledChecked = columns[5] === '[x]';
+          const keepChecked = columns[6] === '[x]';
+
+          // Add the branch to the appropriate set
+          if (handledChecked) {
+            handledBranches.add(branchName);
+          }
+          if (keepChecked) {
+            keepBranches.add(branchName);
+          }
+        }
+      }
+    }
+
+    core.info(`Found existing summary issue #${issueNumber} with previous branch statuses.`);
+  }
+
+  // Create the new issue body in table format with preserved check states
+  const tableHeader = `
+| Branch | Last Commit Date | Creator | Status | Pull Request | Handled | Keep |
+|--------|------------------|---------|--------|--------------|---------|------|`;
+
+  const tableRows = inactiveBranches.map((branch) => {
+    const status = branch.isMerged ? 'Merged' : 'Unmerged';
+    const prLink = branch.prNumber
+      ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})`
+      : 'None';
+
+    return `| \`${branch.name}\` | ${branch.lastCommitDate} | @${branch.creator} | ${status} | ${prLink} | [${handledBranches.has(branch.name) ? 'x' : ' '}] | [${keepBranches.has(branch.name) ? 'x' : ' '}] |`;
+  });
+
+  const issueBody = `### Inactive Branches
+
+This is a list of branches that have been inactive based on the specified threshold. Please check off either "Handled" or "Keep" for each branch.
+
+${tableHeader}
+${tableRows.join('\n')}`;
+
+  if (issues.length > 0) {
+    // Update existing summary issue
     const issueNumber = issues[0].number;
 
     await octokit.rest.issues.update({
