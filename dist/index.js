@@ -30094,7 +30094,9 @@ async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
     // Create the new issue body
     const issueBody = `### ${inactiveBranches.length} Inactive Branches
 
-This is a list of branches that have been inactive beyond the specified threshold. If you are the creator of a branch, please review it and delete it if it is no longer needed. After reviewing and taking action, return to this page and check off either "Keep" or "Delete" for each branch to notify your team of your decision.
+This is a list of branches that have been inactive beyond the specified threshold. If you are the creator of a branch, please review it and delete it if it is no longer needed. 
+
+After reviewing and taking action, return to this page and check off either **Keep** or **Delete** for each branch to notify your team of your decision.
 
 This list was automatically generated using [Repo Pruner](https://github.com/marketplace/actions/repo-pruner).
 \n---\n
@@ -30109,8 +30111,8 @@ _Pull Request:_ ${branch.prNumber ? `[PR #${branch.prNumber}](https://github.com
 
 \n
 **Did you keep or delete this branch?**
-- [' '}] **Keep**
-- [' '}] **Delete**
+- [ ] **Keep**
+- [ ] **Delete**
 `)
         .join('\n---\n')}
 `;
