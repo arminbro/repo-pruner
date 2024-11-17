@@ -1,5 +1,5 @@
 name: "Repo Pruner"
-description: "Scans for inactive branches and creates a summary issue listing their status (merged, unmerged, or without an associated PR) for review."
+description: "Scans for inactive branches and creates a summary issue listing their status for review."
 author: "Armin Broubakarian"
 
 inputs:
