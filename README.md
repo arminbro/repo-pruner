@@ -48,7 +48,7 @@ The action generates a GitHub issue summarizing all inactive branches. Each bran
 - **Handled or Keep**: Developers can mark a branch as either "Handled" (merged or deleted) or "Keep" (branch should not be deleted).
 
 ### Example Issue
-```md
+```
 ### Inactive Branches
 
 This is a list of branches that have been inactive based on the specified threshold. Please check off either "Handled" or "Keep" for each branch.
