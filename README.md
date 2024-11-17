@@ -1,13 +1,13 @@
 # Repo Pruner
 
-**Repo Pruner** is a GitHub Action designed to help maintain clean and organized repositories by monitoring inactive branches. This tool scans for branches that have been inactive for a specified duration (based on the last commit date) and automatically opens a pull request for each branch. The branch creator is assigned as the reviewer, allowing them to either merge their work or close the PR and delete the branch, ensuring your repository remains streamlined and clutter-free.
+**Repo Pruner** is a GitHub Action designed to help maintain clean and organized repositories by monitoring inactive branches. This tool scans for branches that have been inactive for a specified duration (based on the last commit date) and creates a summary issue listing their status. The issue includes details like the branch name, the last commit date, whether the branch has been merged, and any associated pull requests, allowing your team to review and decide on further actions.
 
 ## Features
 - Scans branches for inactivity based on the number of days since the last commit.
-- Ignores protected branches and branches that already have an open pull request.
-- Creates a pull request for each inactive branch targeting the base branch.
-- Assigns the branch creator as the reviewer for the PR.
-- Provides a customizable inactivity threshold and base branch.
+- Ignores protected branches and lists all others in a summary issue.
+- Displays the status of each branch (e.g., merged, unmerged).
+- Includes links to associated pull requests or marks branches without PRs as "None."
+- Provides a customizable inactivity threshold.
 
 ## Usage
 To use **Repo Pruner**, add it to your workflow file:
@@ -16,7 +16,7 @@ To use **Repo Pruner**, add it to your workflow file:
 name: "Run Repo Pruner"
 on:
   schedule:
-    - cron: '0 0 * * 0' # Example: You can run it weekly
+    - cron: '0 0 1 * *' # Example: Runs once a month - At 00:00 on day-of-month 1.
   workflow_dispatch:
 
 jobs:
@@ -29,15 +29,35 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           inactive_days: 30
-          base_branch: main
 ```
 
 ## Inputs
 
-| Name           | Description                                                                                  | Required | Default     |
-|----------------|----------------------------------------------------------------------------------------------|----------|-------------|
-| `inactive_days`| Number of days since the last commit before a branch is considered inactive.                 | No       | `30`        |
-| `base_branch`  | The base branch used for the pull request.                                                   | No       | `main`      |
+| Name            | Description                                                                                          | Required | Default     |
+|-----------------|------------------------------------------------------------------------------------------------------|----------|-------------|
+| `inactive_days` | Number of days since the last commit before a branch is considered inactive.                         | No       | `30`        |
+
+## Output Summary
+The action generates a GitHub issue summarizing all inactive branches. Each branch is listed with the following details:
+- **Branch Name**: The name of the branch.
+- **Last Commit Date**: The date of the last commit on the branch.
+- **Creator**: The username of the branch creator.
+- **Status**: Indicates whether the branch has been merged into another branch or remains unmerged.
+- **Pull Request**: A link to the associated pull request (if any) or "None" if no PR exists.
+
+### Example Issue
+```md
+### Inactive Branches
+
+This is a list of branches that have been inactive based on the specified threshold.
+
+| Branch       | Last Commit Date | Creator    | Status     | Pull Request          |
+|--------------|------------------|------------|------------|-----------------------|
+| feature-1    | 11/01/2024       | @johndoe   | Merged     | [PR #42](https://github.com/my-org/my-repo/pull/42) |
+| hotfix-123   | 10/15/2024       | @janedoe   | Unmerged   | None                  |
+| experiment-2 | 10/05/2024       | @janedoe   | Unmerged   | None                  |
+| feature-3    | 11/05/2024       | @alice     | Open       | [PR #99](https://github.com/my-org/my-repo/pull/99) |
+```
 
 ## Environment Variables
 - **`GITHUB_TOKEN`** (required): GitHub token for authentication.
@@ -45,8 +65,8 @@ jobs:
 ## Permissions
 Ensure your GitHub Actions workflow has sufficient permissions to:
 - **Read branches**
-- **Create pull requests**
-- **Assign reviewers**
+- **List pull requests**
+- **Create and update issues**
 
 Using `${{ secrets.GITHUB_TOKEN }}` should provide the necessary permissions for most standard uses.
 

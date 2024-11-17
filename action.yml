@@ -1,16 +1,12 @@
 name: "Repo Pruner"
-description: "Scans for inactive branches, opens PRs for review, and assigns branch creators as reviewers to merge or delete branches."
+description: "Scans for inactive branches and creates a summary issue listing their status (merged, unmerged, or without an associated PR) for review."
 author: "Armin Broubakarian"
 
 inputs:
   inactive_days:
-    description: "Number of days since the last commit before a branch is considered inactive (default 30)"
+    description: "Number of days since the last commit before a branch is considered inactive. Branches that haven't had commits in this time frame will be listed in the summary issue. Default is 30."
     required: false
     default: "30"
-  base_branch:
-    description: "Base branch used for the pull request (default 'main')"
-    required: false
-    default: "main"
 
 runs:
   using: 'node20'
