@@ -8,7 +8,7 @@
 - Displays the status of each branch (e.g., merged, unmerged).
 - Includes links to associated pull requests or marks branches without PRs as "None."
 - Provides a customizable inactivity threshold.
-- Allows developers to mark branches as "Keep" or "Deleted" via checkboxes for clear communication.
+- Allows developers to mark branches as "Kept" or "Deleted" via checkboxes for clear communication.
 
 ## Usage
 To use **Repo Pruner**, add it to your workflow file:
@@ -45,7 +45,7 @@ The action generates a GitHub issue summarizing all inactive branches. Each bran
 - **Creator**: The username of the branch creator.
 - **Status**: Indicates whether the branch has been merged into another branch or remains unmerged.
 - **Pull Request**: A link to the associated pull request (if any) or "None" if no PR exists.
-- **Keep or Deleted**: Developers can mark a branch as either "Keep" (branch should not be deleted) or "Deleted" (branch they have already deleted).
+- **Kept or Deleted**: Developers can mark a branch as either "Kept" (branch should not be deleted) or "Deleted" (branch they have already deleted).
 
 ### Example Issue
 

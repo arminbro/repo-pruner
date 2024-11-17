@@ -1,7 +1,7 @@
 name: "Run Repo Pruner"
 on:
   schedule:
-    - cron: '0 0 * * 0' # Runs weekly
+    - cron: '0 0 1 * *' # Runs once a month - At 00:00 on day-of-month 1.
   workflow_dispatch:
 
 jobs:
@@ -14,4 +14,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           inactive_days: 30
-          base_branch: main
