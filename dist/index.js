@@ -29938,103 +29938,206 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
+const issueUtils_1 = __nccwpck_require__(7221);
 async function run() {
     try {
         // Get token
         const token = process.env.GITHUB_TOKEN;
         if (!token) {
-            throw new Error(`GITHUB_TOKEN environment variable is not set`);
+            throw new Error(`GITHUB_TOKEN environment variable is not set.`);
         }
         // Get input values
         const inactiveDays = parseInt(core.getInput('inactive_days') || '30');
-        const baseBranch = core.getInput('base_branch') || 'main';
+        if (isNaN(inactiveDays) || inactiveDays <= 0) {
+            throw new Error('The inactive_days input must be a valid positive number.');
+        }
         const octokit = github.getOctokit(token);
         const { owner, repo } = github.context.repo;
-        // Get the current date and calculate the threshold date
-        const currentDate = new Date();
+        // Calculate the threshold date for inactivity
         const thresholdDate = new Date();
-        thresholdDate.setDate(currentDate.getDate() - inactiveDays);
+        thresholdDate.setDate(thresholdDate.getDate() - inactiveDays);
         // List branches in the repository
         const { data: branches } = await octokit.rest.repos.listBranches({
             owner,
             repo,
         });
+        if (branches.length === 0) {
+            core.info('No branches found in the repository.');
+            return;
+        }
+        let inactiveBranches = [];
         for (const branch of branches) {
-            // Skip the base branch
-            if (branch.name === baseBranch) {
-                core.info(`Skipping base branch: ${branch.name}`);
-                continue;
-            }
+            core.info(`Processing branch: ${branch.name}`);
             // Skip protected branches
             if (branch.protected) {
                 core.info(`Skipping protected branch: ${branch.name}`);
                 continue;
             }
-            // Check if a PR already exists for the branch
-            const { data: prs } = await octokit.rest.pulls.list({
-                owner,
-                repo,
-                head: `${owner}:${branch.name}`,
-                state: 'open',
-            });
-            // Skip branches that already has an open PR.
-            if (prs.length > 0) {
-                core.info(`Skipping branch ${branch.name} as it already has an open PR.`);
+            // Get the last commit date
+            let commitData;
+            try {
+                const { data } = await octokit.rest.repos.getCommit({
+                    owner,
+                    repo,
+                    ref: branch.commit.sha,
+                });
+                commitData = data;
+            }
+            catch (error) {
+                core.warning(`Failed to fetch commit data for branch ${branch.name}: ${error}`);
                 continue;
             }
-            // Get the last commit of the branch
-            const { data } = await octokit.rest.repos.getCommit({
-                owner,
-                repo,
-                ref: branch.commit.sha,
-            });
-            const lastCommitDate = data.commit.author?.date ? new Date(data.commit.author.date) : null;
-            // if lastCommitDate is null
+            const lastCommitDate = commitData.commit.author?.date ? new Date(commitData.commit.author.date) : null;
             if (!lastCommitDate) {
-                throw new Error(`Branch ${branch.name} is missing the last commit date.`);
+                core.info(`Skipping branch due to missing last commit date: ${branch.name}`);
+                continue;
             }
+            // Check if the branch is inactive
             if (lastCommitDate < thresholdDate) {
-                // Branch is inactive
-                const branchName = branch.name;
-                const creator = data.author?.login || 'unknown';
-                // Create a pull request for the branch
-                const prTitle = `Review: Inactive branch '${branchName}'`;
-                const prBody = `
-### Inactive Branch Notice
-
-This branch has been inactive since ${lastCommitDate.toISOString().split('T')[0]}.
-You have been assigned as the reviewer. If the work is complete, please merge this branch and delete it. Otherwise, close this PR and delete this branch.
-
-Cc: @${creator}
-        `;
-                const prResponse = await octokit.rest.pulls.create({
-                    owner,
-                    repo,
-                    title: prTitle,
-                    head: branchName,
-                    base: baseBranch,
-                    body: prBody,
+                const creator = commitData.author?.login || 'unknown';
+                let isMerged = false;
+                let prNumber = undefined;
+                // Check if this branch has any PRs
+                try {
+                    const { data: prs } = await octokit.rest.pulls.list({
+                        owner,
+                        repo,
+                        head: `${owner}:${branch.name}`,
+                    });
+                    if (prs.length > 0) {
+                        prNumber = prs[0].number; // Take the first PR associated with the branch
+                        try {
+                            const { data: prDetails } = await octokit.rest.pulls.get({
+                                owner,
+                                repo,
+                                pull_number: prNumber,
+                            });
+                            isMerged = prDetails.merged; // Check if the PR was merged
+                        }
+                        catch (error) {
+                            core.warning(`Failed to fetch PR details for PR #${prNumber}: ${error}`);
+                        }
+                    }
+                }
+                catch (error) {
+                    core.warning(`Failed to list PRs for branch ${branch.name}: ${error}`);
+                }
+                // Add branch to inactive list with relevant details
+                inactiveBranches.push({
+                    name: branch.name,
+                    lastCommitDate: lastCommitDate.toLocaleDateString(),
+                    creator,
+                    isMerged,
+                    prNumber: isMerged ? prNumber : undefined,
                 });
-                const prNumber = prResponse.data.number;
-                // Assign the creator as a reviewer to the PR
-                await octokit.rest.pulls.requestReviewers({
-                    owner,
-                    repo,
-                    pull_number: prNumber,
-                    reviewers: [creator],
-                });
-                core.info(`Pull request created for branch: ${branchName} and reviewer assigned: ${creator}`);
+                core.info(`Added branch to inactive list: ${branch.name}`);
             }
         }
+        if (inactiveBranches.length > 0) {
+            await (0, issueUtils_1.createOrUpdateSummaryIssue)(owner, repo, inactiveBranches);
+            return;
+        }
+        core.info('No inactive branches found.');
     }
     catch (error) {
         if (error instanceof Error) {
-            return core.setFailed(`Action failed with error: ${error.message}`);
+            core.setFailed(`Action failed with error: ${error.message}`);
+            return;
         }
         core.setFailed('Action failed with an unknown error');
     }
 }
 run();
+
+
+/***/ }),
+
+/***/ 7221:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createOrUpdateSummaryIssue = createOrUpdateSummaryIssue;
+const core = __importStar(__nccwpck_require__(7484));
+const github = __importStar(__nccwpck_require__(3228));
+async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
+    // Get token
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+        throw new Error('GITHUB_TOKEN environment variable is not set.');
+    }
+    const octokit = github.getOctokit(token);
+    const issueTitle = 'Repo Pruner: Inactive Branches Summary';
+    // Construct the issue body
+    const tableHeader = `
+| Branch | Last Commit Date | Creator | Status     | Pull Request |
+|--------|------------------|---------|------------|--------------|`;
+    const tableRows = inactiveBranches.map((branch) => {
+        const status = branch.isMerged ? 'Merged' : 'Unmerged';
+        const prLink = branch.prNumber
+            ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})`
+            : 'None';
+        return `| ${branch.name} | ${branch.lastCommitDate} | @${branch.creator} | ${status} | ${prLink} |`;
+    });
+    const issueBody = `### Inactive Branches
+
+This is a list of branches that have been inactive based on the specified threshold.
+
+${tableHeader}
+${tableRows.join('\n')}`;
+    // Check if an existing summary issue is open
+    const { data: issues } = await octokit.rest.issues.listForRepo({
+        owner,
+        repo,
+        state: 'open',
+        labels: 'Repo Pruner Summary',
+    });
+    if (issues.length > 0) {
+        // Update the existing issue
+        const issueNumber = issues[0].number;
+        await octokit.rest.issues.update({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body: issueBody,
+        });
+        core.info(`Updated existing summary issue #${issueNumber}`);
+        return;
+    }
+    // Create a new summary issue
+    await octokit.rest.issues.create({
+        owner,
+        repo,
+        title: issueTitle,
+        body: issueBody,
+        labels: ['Repo Pruner Summary'],
+    });
+    core.info('Created a new summary issue for inactive branches.');
+}
 
 
 /***/ }),
