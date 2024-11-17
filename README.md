@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Repo Pruner
-        uses: arminbro/repo-pruner@v2.1.8
+        uses: arminbro/repo-pruner@v2.1.10
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
