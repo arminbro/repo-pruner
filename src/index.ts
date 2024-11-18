@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { createOrUpdateSummaryIssue } from './utils/issueUtils';
-import type { InactiveBranch } from './utils/types';
+import { calculateThresholdDate } from './utils/dateUtils';
+import type { InactiveBranch } from './types';
 
 async function run() {
   try {
@@ -23,8 +24,7 @@ async function run() {
     const { owner, repo } = github.context.repo;
 
     // Calculate the threshold date for inactivity
-    const thresholdDate = new Date();
-    thresholdDate.setDate(thresholdDate.getDate() - inactiveDays);
+    const thresholdDate = calculateThresholdDate(inactiveDays);
 
     // List branches in the repository
     const { data: branches } = await octokit.rest.repos.listBranches({
@@ -118,7 +118,7 @@ async function run() {
     }
 
     if (inactiveBranches.length > 0) {
-      await createOrUpdateSummaryIssue(owner, repo, inactiveBranches);
+      await createOrUpdateSummaryIssue(owner, repo, inactiveBranches, inactiveDays);
       return;
     }
 

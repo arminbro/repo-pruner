@@ -1,11 +1,13 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import type { InactiveBranch } from './types';
+import { calculateDaysOld } from './dateUtils';
+import type { InactiveBranch } from '../types';
 
 export async function createOrUpdateSummaryIssue(
   owner: string,
   repo: string,
-  inactiveBranches: InactiveBranch[]
+  inactiveBranches: InactiveBranch[],
+  inactiveDays: number
 ): Promise<void> {
   // Get token
   const token = process.env.GITHUB_TOKEN;
@@ -19,7 +21,7 @@ export async function createOrUpdateSummaryIssue(
   // Create the new issue body
   const issueBody = `### ${inactiveBranches.length} Inactive Branches
 
-This is a list of branches that have been inactive beyond the specified threshold. If you are the creator of a branch, please review it and delete it if it is no longer needed. 
+This is a list of branches that have been inactive beyond the specified threshold (${inactiveDays} days). If you are the creator of a branch, please review it and delete it if it is no longer needed. 
 
 After reviewing and taking action, return to this page and check off either **Keep** or **Delete** for each branch to notify your team of your decision.
 
@@ -30,7 +32,7 @@ ${inactiveBranches
   .map(
     (branch) => `
 #### Branch: [${branch.name}](https://github.com/${owner}/${repo}/branches/all?query=${branch.name})
-_Last Commit Date:_ ${branch.lastCommitDate}  
+_Last Commit Date:_ ${branch.lastCommitDate} (${calculateDaysOld(branch.lastCommitDate)} days old)  
 _Creator:_ ${branch.creator === 'unknown' ? 'unknown' : `@${branch.creator}`}  
 _Status:_ ${branch.isMerged ? 'Merged' : 'Unmerged'}  
 _Pull Request:_ ${
