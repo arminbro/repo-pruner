@@ -29939,6 +29939,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const issueUtils_1 = __nccwpck_require__(7221);
+const dateUtils_1 = __nccwpck_require__(5483);
 async function run() {
     try {
         // Get token
@@ -29954,8 +29955,7 @@ async function run() {
         const octokit = github.getOctokit(token);
         const { owner, repo } = github.context.repo;
         // Calculate the threshold date for inactivity
-        const thresholdDate = new Date();
-        thresholdDate.setDate(thresholdDate.getDate() - inactiveDays);
+        const thresholdDate = (0, dateUtils_1.calculateThresholdDate)(inactiveDays);
         // List branches in the repository
         const { data: branches } = await octokit.rest.repos.listBranches({
             owner,
@@ -30034,7 +30034,7 @@ async function run() {
             }
         }
         if (inactiveBranches.length > 0) {
-            await (0, issueUtils_1.createOrUpdateSummaryIssue)(owner, repo, inactiveBranches);
+            await (0, issueUtils_1.createOrUpdateSummaryIssue)(owner, repo, inactiveBranches, inactiveDays);
             return;
         }
         core.info('No inactive branches found.');
@@ -30048,6 +30048,30 @@ async function run() {
     }
 }
 run();
+
+
+/***/ }),
+
+/***/ 5483:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.calculateDaysOld = calculateDaysOld;
+exports.calculateThresholdDate = calculateThresholdDate;
+function calculateDaysOld(lastCommitDate) {
+    const now = new Date();
+    const lastCommit = new Date(lastCommitDate);
+    const diffTime = now.getTime() - lastCommit.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+    return diffDays;
+}
+function calculateThresholdDate(inactiveDays) {
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() - inactiveDays);
+    return thresholdDate;
+}
 
 
 /***/ }),
@@ -30084,7 +30108,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createOrUpdateSummaryIssue = createOrUpdateSummaryIssue;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
-async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
+const dateUtils_1 = __nccwpck_require__(5483);
+async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches, inactiveDays) {
     // Get token
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
@@ -30094,7 +30119,7 @@ async function createOrUpdateSummaryIssue(owner, repo, inactiveBranches) {
     // Create the new issue body
     const issueBody = `### ${inactiveBranches.length} Inactive Branches
 
-This is a list of branches that have been inactive beyond the specified threshold. If you are the creator of a branch, please review it and delete it if it is no longer needed. 
+This is a list of branches that have been inactive beyond the specified threshold (${inactiveDays} days). If you are the creator of a branch, please review it and delete it if it is no longer needed. 
 
 After reviewing and taking action, return to this page and check off either **Keep** or **Delete** for each branch to notify your team of your decision.
 
@@ -30104,7 +30129,7 @@ This list was automatically generated using [Repo Pruner](https://github.com/mar
 ${inactiveBranches
         .map((branch) => `
 #### Branch: [${branch.name}](https://github.com/${owner}/${repo}/branches/all?query=${branch.name})
-_Last Commit Date:_ ${branch.lastCommitDate}  
+_Last Commit Date:_ ${branch.lastCommitDate} (${(0, dateUtils_1.calculateDaysOld)(branch.lastCommitDate)} days old)  
 _Creator:_ ${branch.creator === 'unknown' ? 'unknown' : `@${branch.creator}`}  
 _Status:_ ${branch.isMerged ? 'Merged' : 'Unmerged'}  
 _Pull Request:_ ${branch.prNumber ? `[PR #${branch.prNumber}](https://github.com/${owner}/${repo}/pull/${branch.prNumber})` : 'None'}
