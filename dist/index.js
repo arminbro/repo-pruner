@@ -30003,9 +30003,10 @@ async function run() {
                         owner,
                         repo,
                         head: `${owner}:${branch.name}`,
+                        direction: 'desc', // Ensure the most recently updated PR is first
                     });
                     if (prs.length > 0) {
-                        prNumber = prs[0].number; // Take the first PR associated with the branch
+                        prNumber = prs[0].number; // Get the most recent PR associated with the branch
                         try {
                             const { data: prDetails } = await octokit.rest.pulls.get({
                                 owner,
